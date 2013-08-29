@@ -36,4 +36,13 @@ public:
 	
     ofTrueTypeFont		fontSmall;
     float currTime;
+    
+    ofVideoPlayer       mPlayer;
+    
+    
+    float               duration;
+    float               position;
+    
+    bool                framebyframe;
+    
 };

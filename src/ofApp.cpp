@@ -5,7 +5,7 @@
 void ofApp::setup()
 {
 	isServer = false;
-	
+	//ofSetFrameRate(24);
 	fontSmall.loadFont("Fonts/DIN.otf", 8 );
 		
 	ofSeedRandom();
@@ -41,17 +41,24 @@ void ofApp::setup()
 	{
 		        
 	}
+    
+    mPlayer.loadMovie("movies/fingers.mov");
+	mPlayer.play();
+    framebyframe = false;
+
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 //
 void ofApp::update()
 {
-     currTime = 0.0f;
+    currTime = 0.0f;
     if( isServer ) { currTime = ofGetElapsedTimef(); } else { currTime = commonTimeOsc->getTimeSecs(); }
-    
-	
-    
+    mPlayer.update();
+    if(!framebyframe){
+        float temp = ofMap(sin(currTime/mPlayer.getDuration()), -1, 1, 0, 1);
+        mPlayer.setPosition(temp);
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,23 +66,7 @@ void ofApp::update()
 void ofApp::draw()
 {
 
-	// Set a color that pulsates based on the time we get
-	ofColor bgColor;
-	bgColor.setHsb( ((cosf(currTime/10.0f)+1.0f)/2.0f) * 255, 180, ((cosf(currTime*1.4f)+1.0f)/2.0f) * 255 );
-	ofSetColor(bgColor);
-	ofRect(0,0,ofGetWidth(), ofGetHeight() );
-
-	// Rotate a circle
-	ofColor circleColor = bgColor.getInverted();
-	ofSetColor(circleColor);	
-	ofPushMatrix();
-		ofTranslate(ofGetWidth() * 0.5f, ofGetHeight() * 0.5f );
-		ofRotate( currTime * 50.0f );
-		ofTranslate( ofGetHeight() * 0.45f, 0 );
-		ofCircle( 0, 0, 40 );
-	ofPopMatrix();
-	
-	ofSetColor(255);
+	mPlayer.draw(0, 0);
 	
     if( isServer )
     {
@@ -83,7 +74,8 @@ void ofApp::draw()
     }
     else
     {
-        fontSmall.drawString( "Offset: " + ofToString(commonTimeOsc->offsetMillis) + " OffsetTarget: " + ofToString(commonTimeOsc->offsetMillisTarget), 300, 80 );
+        fontSmall.drawString( "Time: " + ofToString(currTime), 100, 160);
+        fontSmall.drawString( "Offset: " + ofToString(commonTimeOsc->offsetMillis) + " OffsetTarget: " + ofToString(commonTimeOsc->offsetMillisTarget), 100, 80 );
     }
 	
 }
@@ -91,7 +83,8 @@ void ofApp::draw()
 void ofApp::newData( DataPacket& _packet  )
     {
         if(!isServer){
-            string foo = _packet.valuesString[0];
+            if(framebyframe)
+                mPlayer.nextFrame();
         }
     }
 
@@ -101,6 +94,10 @@ void ofApp::newData( DataPacket& _packet  )
 //
 void ofApp::keyPressed(int key)
 {
+    if(key == ' '){
+        framebyframe = !framebyframe;
+        mPlayer.setPaused(framebyframe);
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
